@@ -1,41 +1,83 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
-# Install dependencies
+# Dependências necessárias para Prisma em Alpine
+RUN apk add --no-cache openssl libc6-compat
+
+# -------------------------
+# Instala dependências
+# -------------------------
 FROM base AS deps
+
 WORKDIR /app
+
 COPY package*.json ./
+
 RUN npm ci
 
-# Build
+
+# -------------------------
+# Build da aplicação
+# -------------------------
 FROM base AS builder
+
 WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Garante que a pasta public exista mesmo se o projeto não tiver
+RUN mkdir -p public
+
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Caso DATABASE_URL seja necessário no build
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
 RUN npx prisma generate
+
 RUN npm run build
 
-# Production runner
+
+# -------------------------
+# Runtime
+# -------------------------
 FROM base AS runner
+
 WORKDIR /app
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
+# Caso DATABASE_URL venha do docker-compose/env_file
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Usuário não-root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copia saída standalone do Next
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Pasta public pode estar vazia, mas agora sempre existe
 COPY --from=builder /app/public ./public
+
+# Prisma necessário em runtime
+
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules ./node_modules
+
+
+
+# Ajusta permissões
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
+
 EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node server.js"]

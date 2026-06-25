@@ -1,39 +1,52 @@
 services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/mcphub
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      MCP_HUB_ENCRYPTION_KEY: ${MCP_HUB_ENCRYPTION_KEY:-}
-      MCP_TOOL_CACHE_TTL_MS: ${MCP_TOOL_CACHE_TTL_MS:-300000}
-      AZURE_AD_CLIENT_ID: ${AZURE_AD_CLIENT_ID}
-      AZURE_AD_CLIENT_SECRET: ${AZURE_AD_CLIENT_SECRET}
-      AZURE_AD_TENANT_ID: ${AZURE_AD_TENANT_ID}
-      ADMIN_GROUP_ID: ${ADMIN_GROUP_ID}
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-
-  db:
+  postgres:
     image: postgres:16-alpine
-    ports:
-      - "127.0.0.1:5432:5432"
+    container_name: mcp-hub-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: mcphub
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mcphub
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d mcphub"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  mcp-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    container_name: mcp-hub
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: ${DATABASE_URL}
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mcp-hub-nginx
+    restart: unless-stopped
+    depends_on:
+      - mcp-hub
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/nginx/ssl:/etc/nginx/ssl:ro
 
 volumes:
-  postgres_data:
+  postgres-data:
