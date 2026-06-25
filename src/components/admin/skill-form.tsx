@@ -25,6 +25,7 @@ export function SkillForm({ open, onClose, skill }: Props) {
   const [content, setContent] = useState(skill?.content ?? "");
   const [enabled, setEnabled] = useState(skill?.enabled ?? true);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setName(skill?.name ?? "");
     setDescription(skill?.description ?? "");
@@ -33,6 +34,7 @@ export function SkillForm({ open, onClose, skill }: Props) {
     setTab("write");
     setError(null);
   }, [skill, open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleSave(formData: FormData) {
     setError(null);

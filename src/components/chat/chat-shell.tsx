@@ -355,6 +355,7 @@ export function ChatShell({
       .catch(() => {
         // Silently ignore — user context is enhancement, not required
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

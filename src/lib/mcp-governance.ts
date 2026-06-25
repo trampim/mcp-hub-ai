@@ -1,3 +1,4 @@
+import type { InputJsonValue } from "@prisma/client/runtime/library";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
@@ -10,6 +11,7 @@ export type McpExecutionContext = {
   source: ExecutionSource;
   userId?: string;
   personalTokenId?: string;
+  authSource?: string;
   traceId?: string;
 };
 
@@ -305,8 +307,9 @@ async function writeAudit(input: {
     await prisma.mcpToolExecution.create({
       data: {
         actorUserId: input.context.userId,
-        arguments: sanitizeArguments(input.args) as Prisma.InputJsonValue,
+        arguments: sanitizeArguments(input.args) as InputJsonValue,
         attemptCount: input.attemptCount,
+        authSource: input.context.authSource,
         errorMessage: input.errorMessage?.slice(0, 8_000),
         latencyMs: input.latencyMs,
         mcpServerId: input.mcpServerId,

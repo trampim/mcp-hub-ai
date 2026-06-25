@@ -42,10 +42,13 @@ function parseToolName(functionName: string): { serverId: string; toolName: stri
 
 async function handleProxyRequest(request: Request): Promise<Response> {
   const bearer = extractBearer(request);
+  const resourceMetadataUrl = `${new URL(request.url).origin}/.well-known/oauth-protected-resource`;
+  const wwwAuthenticate = `Bearer realm="mcp-hub", resource_metadata="${resourceMetadataUrl}"`;
+
   if (!bearer) {
     return new Response(
       JSON.stringify({ error: "Missing or invalid Authorization header." }),
-      { status: 401, headers: { "Content-Type": "application/json" } },
+      { status: 401, headers: { "Content-Type": "application/json", "WWW-Authenticate": wwwAuthenticate } },
     );
   }
 
@@ -53,7 +56,7 @@ async function handleProxyRequest(request: Request): Promise<Response> {
   if (!tokenUser) {
     return new Response(
       JSON.stringify({ error: "Invalid or expired token." }),
-      { status: 401, headers: { "Content-Type": "application/json" } },
+      { status: 401, headers: { "Content-Type": "application/json", "WWW-Authenticate": wwwAuthenticate } },
     );
   }
 
@@ -203,6 +206,7 @@ async function handleProxyRequest(request: Request): Promise<Response> {
         parsed.toolName,
         (args as Record<string, unknown>) ?? {},
         {
+          authSource: "personal_token",
           personalTokenId: tokenUser.tokenId,
           source: "proxy",
           traceId,

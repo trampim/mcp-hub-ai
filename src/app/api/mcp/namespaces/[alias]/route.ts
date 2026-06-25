@@ -24,15 +24,21 @@ async function handleNamespaceRequest(
   context: { params: Promise<{ alias: string }> },
 ): Promise<Response> {
   const bearer = extractBearer(request);
+  const resourceMetadataUrl = `${new URL(request.url).origin}/.well-known/oauth-protected-resource`;
+  const wwwAuthenticate = `Bearer realm="mcp-hub", resource_metadata="${resourceMetadataUrl}"`;
+
   if (!bearer) {
     return Response.json(
-      { error: "Provide a personal access token as a Bearer token." },
-      { status: 401 },
+      { error: "Provide a personal access token or complete the OAuth flow." },
+      { status: 401, headers: { "WWW-Authenticate": wwwAuthenticate } },
     );
   }
   const tokenUser = await resolveTokenUser(bearer);
   if (!tokenUser) {
-    return Response.json({ error: "Invalid personal access token." }, { status: 401 });
+    return Response.json(
+      { error: "Invalid personal access token." },
+      { status: 401, headers: { "WWW-Authenticate": wwwAuthenticate } },
+    );
   }
 
   const { alias } = await context.params;
@@ -119,6 +125,7 @@ async function handleNamespaceRequest(
         tool.originalToolName,
         toolRequest.params.arguments ?? {},
         {
+          authSource: "personal_token",
           personalTokenId: tokenUser.tokenId,
           source: "namespace",
           traceId,

@@ -90,6 +90,7 @@ export function ConnectionsClient({ items, namespaces, proxyUrl }: { items: Conn
   );
 
   // Sync state when items prop updates (e.g. after router.refresh())
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setEnabledMap(Object.fromEntries(items.map((i) => [i.id, i.userEnabled])));
     setStatuses(Object.fromEntries(items.map((item) => [
@@ -103,6 +104,7 @@ export function ConnectionsClient({ items, namespaces, proxyUrl }: { items: Conn
             : "disconnected",
     ])));
   }, [items]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -169,7 +171,7 @@ export function ConnectionsClient({ items, namespaces, proxyUrl }: { items: Conn
     } catch {
       setStatuses((s) => ({ ...s, [mcpId]: "error" }));
     }
-  }, []);
+  }, [router]);
 
   const disconnect = useCallback(async (mcpId: string) => {
     setStatuses((s) => ({ ...s, [mcpId]: "pending" }));

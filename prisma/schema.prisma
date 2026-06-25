@@ -21,6 +21,7 @@ model User {
   accounts       Account[]
   sessions       Session[]
   tokens         PersonalToken[]
+  oauthCodes     OAuthCode[]
   connections    UserMcpConnection[]
   mcpPreferences UserMcpPreference[]
   toolExecutions McpToolExecution[]
@@ -133,6 +134,7 @@ model McpToolExecution {
   actorUserId     String?
   actorUser       User?      @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
   personalTokenId String?
+  authSource      String?
   serverName      String
   toolName        String
   source          String
@@ -147,6 +149,7 @@ model McpToolExecution {
   @@index([mcpServerId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([personalTokenId, createdAt])
+  @@index([authSource, createdAt])
   @@index([source, createdAt])
   @@index([status, createdAt])
   @@index([traceId])
@@ -215,6 +218,20 @@ model PersonalToken {
   tokenHash  String    @unique
   lastUsedAt DateTime?
   createdAt  DateTime  @default(now())
+}
+
+model OAuthCode {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash      String    @unique
+  codeChallenge String
+  clientId      String?
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([expiresAt])
 }
 
 model UserMcpConnection {

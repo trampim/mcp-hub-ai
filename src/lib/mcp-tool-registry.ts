@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import type { InputJsonValue } from "@prisma/client/runtime/library";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
@@ -292,8 +293,8 @@ function hashTool(tool: McpDiscoveredTool) {
     .digest("hex");
 }
 
-function toJson(value: unknown): Prisma.InputJsonValue {
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+function toJson(value: unknown): InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as InputJsonValue;
 }
 
 function readCacheTtl() {

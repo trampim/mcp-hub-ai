@@ -8,11 +8,13 @@ export default auth((req) => {
 
   const pathname = nextUrl.pathname;
 
-  // Always allow: auth API, login page, static assets, and proxy endpoint (uses its own Bearer auth)
+  // Always allow: auth API, login page, static assets, OAuth discovery, and proxy endpoint (uses its own Bearer auth)
   if (
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/mcp/proxy") ||
     pathname.startsWith("/api/mcp/namespaces") ||
+    pathname.startsWith("/api/mcp/auth") ||
+    pathname.startsWith("/.well-known") ||
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/icon")

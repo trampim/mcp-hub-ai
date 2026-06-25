@@ -57,6 +57,7 @@ export function WorkspaceForm({
   const [draftSkillIds, setDraftSkillIds] = useState<string[]>(workspace?.skills.map((skill) => skill.id) ?? []);
   const [draftGroupIds, setDraftGroupIds] = useState<string[]>(workspace?.groups.map((group) => group.id) ?? []);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setEnabled(workspace?.enabled ?? true);
     setIsDefault(workspace?.isDefault ?? false);
@@ -69,6 +70,7 @@ export function WorkspaceForm({
     setAddGroupOpen(false);
     setError(null);
   }, [workspace, open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectedSkills = useMemo(() => new Set(selectedSkillIds), [selectedSkillIds]);
   const selectedGroups = useMemo(() => new Set(selectedGroupIds), [selectedGroupIds]);

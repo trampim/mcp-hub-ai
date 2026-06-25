@@ -58,6 +58,7 @@ export function NamespaceForm({
   const [draftGroupIds, setDraftGroupIds] = useState<string[]>(namespace?.groups.map((g) => g.id) ?? []);
   const router = useRouter();
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setAllUsers(namespace?.allUsers ?? false);
     setEnabled(namespace?.enabled ?? true);
@@ -70,6 +71,7 @@ export function NamespaceForm({
     setAddGroupOpen(false);
     setError(null);
   }, [namespace, open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const selectedGroups = new Set(selectedGroupIds);
   const selectedMcps = new Set(selectedMcpIds);

@@ -119,9 +119,11 @@ function LlmRow({ llm, onEdit }: { llm: LlmConfigRow; onEdit: () => void }) {
   const router = useRouter();
   const model = llm.allowedModels[0] || "No model";
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setIsDefault(llm.isDefault);
   }, [llm.isDefault]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function retest() {
     setError(null);
