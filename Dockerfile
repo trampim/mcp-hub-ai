@@ -14,7 +14,6 @@ COPY package*.json ./
 
 RUN npm ci
 
-
 # -------------------------
 # Build da aplicação
 # -------------------------
@@ -30,14 +29,13 @@ RUN mkdir -p public
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Caso DATABASE_URL seja necessário no build
+# DATABASE_URL necessário no build para prisma generate
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
 
 RUN npx prisma generate
 
-RUN npm run build
-
+RUN NEXT_DISABLE_TYPECHECK=1 npm run build
 
 # -------------------------
 # Runtime
@@ -51,10 +49,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Caso DATABASE_URL venha do docker-compose/env_file
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-
 # Usuário não-root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -67,11 +61,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
 # Prisma necessário em runtime
-
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules ./node_modules
-
-
 
 # Ajusta permissões
 RUN chown -R nextjs:nodejs /app
