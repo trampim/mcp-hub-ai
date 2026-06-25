@@ -47,7 +47,8 @@ export type AuditAction =
   | "user.oauth.connect"
   | "user.oauth.disconnect"
   // Auth
-  | "user.login";
+  | "user.login"
+  | "user.auto_provision";
 
 export function logAudit(params: {
   userId?: string;
