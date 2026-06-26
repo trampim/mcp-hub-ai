@@ -34,13 +34,13 @@ export type ResolvedWorkspaceContext = {
 const workspaceInclude = {
   groups: { select: { entraGroupId: true } },
   users: { select: { id: true } },
-  skills: { where: { enabled: true }, orderBy: { name: "asc" } },
+  skills: { where: { enabled: true }, orderBy: { name: "asc" as const } },
   llmConfig: true,
   namespace: {
     include: {
       servers: {
         where: { enabled: true, mcpServer: { enabled: true } },
-        orderBy: { displayOrder: "asc" },
+        orderBy: { displayOrder: "asc" as const },
         include: { mcpServer: true },
       },
       tools: {
