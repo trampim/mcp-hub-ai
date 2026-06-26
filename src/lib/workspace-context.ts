@@ -57,10 +57,8 @@ const workspaceInclude = {
   },
 };
 
-// WorkspaceWithContext is inferred from the prisma client return type.
-// Proper Prisma utility types (WorkspaceGetPayload) will be available once prisma generate runs.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WorkspaceWithContext = Awaited<ReturnType<typeof prisma.workspace.findFirst>> & Record<string, any>;
+const _workspaceQuery = () => prisma.workspace.findFirst({ include: workspaceInclude });
+type WorkspaceWithContext = NonNullable<Awaited<ReturnType<typeof _workspaceQuery>>>;
 
 export async function listAccessibleWorkspaces(
   userId: string,
