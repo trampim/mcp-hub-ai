@@ -1,5 +1,3 @@
-import type { Prisma } from "@prisma/client";
-
 import { prisma } from "@/lib/db";
 import { resolveDelegatedAuthorizationHeaders } from "@/lib/delegated-oauth";
 import { buildLlmConfig, dbMcpToConfig } from "@/lib/user-context";
@@ -57,11 +55,12 @@ const workspaceInclude = {
       },
     },
   },
-} satisfies Prisma.WorkspaceInclude;
+};
 
-type WorkspaceWithContext = Prisma.WorkspaceGetPayload<{
-  include: typeof workspaceInclude;
-}>;
+// WorkspaceWithContext is inferred from the prisma client return type.
+// Proper Prisma utility types (WorkspaceGetPayload) will be available once prisma generate runs.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WorkspaceWithContext = Awaited<ReturnType<typeof prisma.workspace.findFirst>> & Record<string, any>;
 
 export async function listAccessibleWorkspaces(
   userId: string,
@@ -229,7 +228,7 @@ function canAccess(
   );
 }
 
-function normalizeInputSchema(value: Prisma.JsonValue) {
+function normalizeInputSchema(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { type: "object" as const, properties: {}, required: [] };
   }

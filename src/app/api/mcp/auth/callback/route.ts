@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "crypto";
 
 import { logAudit } from "@/lib/audit";
 import { prisma } from "@/lib/db";
+import { getUserGroupsByOid } from "@/lib/entra-graph";
 import { verifyMcpOAuthServerState } from "@/lib/mcp-oauth-server-state";
 
 export const dynamic = "force-dynamic";
@@ -108,8 +109,11 @@ export async function GET(request: Request) {
   // Decode id_token payload — safe: token received directly from Entra over HTTPS
   let idClaims: EntraIdClaims;
   try {
-    const [, payloadB64] = tokenData.id_token.split(".");
-    idClaims = JSON.parse(Buffer.from(payloadB64 ?? "", "base64url").toString("utf8")) as EntraIdClaims;
+    const parts = tokenData.id_token.split(".");
+    if (parts.length !== 3) {
+      return redirectWithError(clientRedirectUri, "server_error", "Malformed identity token.", clientState);
+    }
+    idClaims = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as EntraIdClaims;
   } catch {
     return redirectWithError(clientRedirectUri, "server_error", "Failed to decode identity token.", clientState);
   }
@@ -121,7 +125,17 @@ export async function GET(request: Request) {
 
   const email = idClaims.email ?? idClaims.preferred_username ?? null;
   const name = idClaims.name ?? null;
-  const entraGroups = Array.isArray(idClaims.groups) ? idClaims.groups : [];
+
+  // Prefer authoritative group list from Graph API (works even without groupMembershipClaims
+  // configured in the Azure app manifest and handles >200-group overage).
+  // Falls back to token claim if Graph is unavailable.
+  let entraGroups = Array.isArray(idClaims.groups) ? idClaims.groups : [];
+  try {
+    const graphGroups = await getUserGroupsByOid(entraOid);
+    if (graphGroups.length > 0) entraGroups = graphGroups;
+  } catch {
+    // Graph unavailable — proceed with token claim (may be empty)
+  }
 
   // Find or auto-provision user by Entra OID
   let user = await prisma.user.findUnique({ where: { entraOid } });

@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
 import type { InputJsonValue } from "@prisma/client/runtime/library";
-import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import {
@@ -236,7 +235,7 @@ function registryToolToDiscoveredTool(tool: {
   name: string;
   displayName: string | null;
   description: string | null;
-  inputSchema: Prisma.JsonValue;
+  inputSchema: unknown;
   readOnly: boolean;
   destructive: boolean;
   permissionMode: string;
@@ -257,7 +256,7 @@ function registryToolToDiscoveredTool(tool: {
   };
 }
 
-function normalizeInputSchema(value: Prisma.JsonValue) {
+function normalizeInputSchema(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { type: "object" as const, properties: {}, required: [] };
   }

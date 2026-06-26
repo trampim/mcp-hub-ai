@@ -92,5 +92,10 @@ export async function POST(request: Request) {
     },
   });
 
-  return Response.json({ access_token: rawToken, token_type: "Bearer" });
+  return Response.json({
+    access_token: rawToken,
+    token_type: "Bearer",
+    expires_in: 31536000,
+    scope: "mcp",
+  });
 }

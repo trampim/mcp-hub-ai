@@ -116,6 +116,20 @@ export async function searchEntraGroups(query: string): Promise<EntraGroupSearch
     }));
 }
 
+export async function getUserGroupsByOid(oid: string): Promise<string[]> {
+  const accessToken = await getGraphAccessToken();
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(oid)}/memberOf?$select=id&$top=100`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}`, ConsistencyLevel: "eventual" },
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) return [];
+  const data = (await res.json()) as { value?: Array<{ id?: string }> };
+  return (data.value ?? []).map((g) => g.id).filter((id): id is string => typeof id === "string");
+}
+
 export async function syncEntraGroup(groupId: string): Promise<EntraGroupSyncResult> {
   const accessToken = await getGraphAccessToken();
   const groupResponse = await fetch(

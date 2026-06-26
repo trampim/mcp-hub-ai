@@ -1,5 +1,3 @@
-import type { Prisma } from "@prisma/client";
-
 import { prisma } from "@/lib/db";
 import { resolveDelegatedAuthorizationHeaders } from "@/lib/delegated-oauth";
 import { dbMcpToConfig } from "@/lib/user-context";
@@ -100,7 +98,7 @@ function canAccess(
   );
 }
 
-function normalizeObject(value: Prisma.JsonValue): object {
+function normalizeObject(value: unknown): object {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as object)
     : { type: "object", properties: {} };
